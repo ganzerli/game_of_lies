@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        *{
+            padding:0;
+            margin:0;
+            box-sizing: border-box;
+        }
+
+        body{
+            /* super responsive */
+            display:flex;
+            justify-content: center;
+        }
+
+        .root{
+            position:relative !important;
+            width:600px;
+            height:600px;
+            border:1px solid red;
+            /* display:flex; */
+            /* flex-wrap: wrap; */
+        }
+
+        .cell{
+            left:0;
+            top:0;
+            position:absolute !important;
+            /* width:100px; */
+            /* height:100px; */
+            background:black;
+            border-radius: 50%;;
+        }
+
+        .radar{
+            left:0;
+            top:0;
+            position:absolute !important;
+            width:1px;
+            height:1px;
+            /* position: relative; */
+            background:blue;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="root"></div>
+    
+</body>
+
+
+<script>
+
+    const root = document.querySelector(".root");
+
+    const cells = [];
+
+    const radarDistance = 100;
+
+    for (let i = 0; i <= 9; i++) {
+        
+        const percentageX = Math.floor(Math.random()*100);
+        const percentageY = Math.floor(Math.random()*100);
+
+        // min size = 4;
+        const percentageS = 4 + Math.floor(Math.random()*40);
+
+        const protoCell = {
+            id : Math.random(),
+            x:percentageX*6,
+            y:percentageY*6,
+            size:percentageS,
+            type:true,
+            getCenter:function(){return {x:this.x - this.size/2 ,y:this.y + this.size/2}},
+            near:[]
+        }
+
+        printHtmlCell(protoCell);
+        //emitRadar(radarDistance, protoCell);
+        //radar(radarDistance , protoCell.getCenter(), protoCell.size);
+        cells.push(protoCell);
+        //emitRadar(radarDistance,protoCell);
+    }
+
+    // radar for all cells
+    cells.forEach(cell => emitRadar(radarDistance,cell));
+
+    // print all near cells of all cells..
+    cells.forEach(cell => console.log(cell.near));
+    
+    // PRINTS cell in HTML 
+    function printHtmlCell(protoCell){
+        const exampleCell = document.createElement("span");
+        exampleCell.classList.add("cell");
+        exampleCell.style.left = protoCell.x + "px";
+        exampleCell.style.top = protoCell.y + "px";
+        exampleCell.style.width = protoCell.size + "px";
+        exampleCell.style.height = protoCell.size + "px";
+        root.appendChild(exampleCell);
+    }
+
+    // updates the array cell.near[]
+    function emitRadar(radarDistance, cell){
+        const cellsFound = []
+        // every 3 pixel a radar wave
+        for(let distance=0; distance<= radarDistance; distance += 4){
+            // one radar "turn around"
+            const foundCells = radar(distance, cell);
+            //add to array cells found from this cell
+            foundCells.forEach(cell =>{
+                if(!cellsFound.includes(cell)) cellsFound.push(cell);
+            });
+        }
+        cell.near.push(...cellsFound);
+    }
+
+    // searches point per point in skew square around the cell for other cells
+    function radar(radarDistance, cell){
+        // create variables
+        const cellSize = cell.size;
+        const cellCenter = cell.getCenter();
+
+        // directions
+        const points = [[1,1],[1,-1],[-1,-1],[-1,1]];
+        let pointsCounter = 0;
+
+        // number radar particles increasing 
+        let counterRadarDistance = 0;
+
+        // cells found
+        const cellsFound = [];
+        
+        // starting from top
+        const startingPoints = [ 
+                [-radarDistance, cellSize],
+                [0, cellSize+radarDistance],
+                [+radarDistance,cellSize],
+                [0, cellSize-radarDistance]
+            ];
+        // or the radar ends to add points before the end..
+        const _noIdeaWhy_ = 5;
+
+        // 4 times.. one per side f radar drop
+        for (i = 0; i <= radarDistance * points.length + _noIdeaWhy_; i++){
+            if(counterRadarDistance > radarDistance){
+                // change direction!!
+                counterRadarDistance = 0;
+                pointsCounter++;
+            }else{
+                // get another radar point
+                counterRadarDistance++;
+            }
+            // define radar position
+            // print first starting top..
+
+            const top = (cellCenter.y + startingPoints[pointsCounter][0]) + 
+                        (points[pointsCounter][0] * counterRadarDistance) ;
+            const left = (cellCenter.x + startingPoints[pointsCounter][1]) + 
+                        (points[pointsCounter][1] * counterRadarDistance) ;
+
+            const radar = document.createElement("span");
+            radar.classList.add("radar");
+
+            // array of cells found with this point
+            const pointFoundCells = collisionDetection(left,top,cell);
+
+            if(pointFoundCells.length > 0){ 
+                //i+=5;
+                // add cells to the found array
+                pointFoundCells.forEach(cell =>{
+                    if(!cellsFound.includes(cell)) cellsFound.push(cell);
+                });
+
+                //radar visualization.. yes is only a wave, but we sww also that..
+                //const radar = document.createElement("span");
+                //radar.classList.add("radar");
+                radar.style.backgroundColor = "red";
+                radar.style.left =  left + "px";
+                radar.style.top =  top + "px";
+                //append to.. HTML ELEMENT!!!
+                root.appendChild(radar);
+            }else{
+                 radar.style.backgroundColor = "green";
+            }
+            // radar visualization.. yes is only a wave, but we sww also that..
+            radar.style.left =  left + "px";
+            radar.style.top =  top + "px";
+            // append to.. HTML ELEMENT!!!
+            root.appendChild(radar);
+        }
+        // .... radar found cells [] around this cell ...
+        
+        return cellsFound;
+    }
+
+
+    // returns array of cells different from thisCell found in the point x , y
+    function collisionDetection(x,y,thisCell){
+        let x_ = false;
+        let y_ = false;
+
+        let cellsFoundByPoint = [];
+
+        cells.forEach(cell =>{
+            if(cell.id != thisCell.id){
+                cell.x < x && cell.x + cell.size > x ? x_=true : x_ = false;
+                cell.y < y && cell.y + cell.size > y ? y_=true : y_ = false;
+                if( x_ && y_ ) cellsFoundByPoint.push(cell);
+            }
+        });
+        return cellsFoundByPoint;
+    }
+    
+
+
+</script>
+
+
+
+</html>

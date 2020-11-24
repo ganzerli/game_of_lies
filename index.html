@@ -63,7 +63,7 @@
         "change_spell_surrounded_true":5,
         "change_spell_surrounded_false":3,
         "change_type_spelled_time":5,
-        "time_every_n_ms":20000
+        "time_ever rightPosition = protoCell.x - protoCell.size;y_n_ms":20000
     };
 </script>
 
@@ -80,14 +80,14 @@
 
     // CELLS CREATION
     for (let i = 0; i <= 99; i++) {
-        const percentageX = Math.floor(Math.random()*100);
-        const percentageY = Math.floor(Math.random()*100);
+        //const percentageX = Math.floor(Math.random()*100);
+        //const percentageY = Math.floor(Math.random()*100);
         // min size = 4;
         const percentageS = 4 + Math.floor(Math.random()*40);
         const protoCell = {
             id : Math.random(),
-            x:percentageX*6,
-            y:percentageY*6,
+            x:Math.floor(Math.random()*CONFIG.field_width),
+            y:Math.floor(Math.random()*CONFIG.field_height),
             size:percentageS,
             type:true,
             getCenter:function(){return {x:this.x - this.size/2 ,y:this.y + this.size/2}},
@@ -111,8 +111,21 @@
         const exampleCell = document.createElement("span");
         exampleCell.classList.add("cell");
         exampleCell.setAttribute("id", protoCell.id);
-        exampleCell.style.left = protoCell.x + "px";
-        exampleCell.style.top = protoCell.y + "px";
+
+        if(protoCell.x + protoCell.size > CONFIG.field_width){
+            exampleCell.style.left = "20px";
+            protoCell.x = 20;
+        }else{
+            exampleCell.style.left = protoCell.x + "px";
+        }
+
+        if(protoCell.y + protoCell.size > CONFIG.field_height){
+            exampleCell.style.top = "20px";
+            protoCell.y = 20;
+        }else{
+            exampleCell.style.top = protoCell.y + "px";
+        }
+        
         exampleCell.style.width = protoCell.size + "px";
         exampleCell.style.height = protoCell.size + "px";
         root.appendChild(exampleCell);
@@ -144,9 +157,6 @@
         const directionX = x_y_randomDirection();
         const directionY = x_y_randomDirection();
 
-        console.log(directionX);
-        console.log(directionY);
-
         // guarding for right, and left
         if( directionX + (cell.x + cell.size) > CONFIG.field_width ){
             cell.x += -directionX;
@@ -173,6 +183,14 @@
         cell_.style.left = cell.x+"px";
         cell_.style.top = cell.y+"px";
     }
+
+    //
+
+    //
+
+    //
+
+    //
 
     // GAME LOOP
 

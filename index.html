@@ -55,23 +55,35 @@
     
 </body>
 
+<script id="config">
+    const CONFIG = {
+        "field_width":600,
+        "field_height":600,
+        "px_move":1,
+        "change_spell_surrounded_true":5,
+        "change_spell_surrounded_false":3,
+        "change_type_spelled_time":5,
+        "time_every_n_ms":20000
+    };
+</script>
+
 
 <script>
-
+    console.log(CONFIG);
+    // INIT 
     const root = document.querySelector(".root");
+    root.style.width = CONFIG.field_width;
+    root.style.height = CONFIG.field_height;
 
     const cells = [];
-
     const radarDistance = 100;
 
-    for (let i = 0; i <= 9; i++) {
-        
+    // CELLS CREATION
+    for (let i = 0; i <= 99; i++) {
         const percentageX = Math.floor(Math.random()*100);
         const percentageY = Math.floor(Math.random()*100);
-
         // min size = 4;
         const percentageS = 4 + Math.floor(Math.random()*40);
-
         const protoCell = {
             id : Math.random(),
             x:percentageX*6,
@@ -81,7 +93,6 @@
             getCenter:function(){return {x:this.x - this.size/2 ,y:this.y + this.size/2}},
             near:[]
         }
-
         printHtmlCell(protoCell);
         //emitRadar(radarDistance, protoCell);
         //radar(radarDistance , protoCell.getCenter(), protoCell.size);
@@ -99,12 +110,91 @@
     function printHtmlCell(protoCell){
         const exampleCell = document.createElement("span");
         exampleCell.classList.add("cell");
+        exampleCell.setAttribute("id", protoCell.id);
         exampleCell.style.left = protoCell.x + "px";
         exampleCell.style.top = protoCell.y + "px";
         exampleCell.style.width = protoCell.size + "px";
         exampleCell.style.height = protoCell.size + "px";
         root.appendChild(exampleCell);
     }
+
+    // MOVE CELLS
+    function moveCell(cell,radarCells){
+        // set priority
+            //priority true: move away from false
+            //priority false: move towards true
+        // set behavior
+            //behavior true: go around (random)
+            //behavior false: find false
+        // if radar false has true , keep direction
+        // if radar false has no true, search for false
+
+        // if radar true has false, move away
+        // if radar true has no false, go random
+
+        // expectation: false stay together by false
+            //          true stay together by stay-away
+        
+        // BASIC MOVE EXAMPLE
+        // generate random + 0r -
+        const x_y_randomDirection = () => {
+           return Math.random()*10 < 5.000 ? CONFIG.px_move : -CONFIG.px_move;
+        }
+        
+        const directionX = x_y_randomDirection();
+        const directionY = x_y_randomDirection();
+
+        console.log(directionX);
+        console.log(directionY);
+
+        // guarding for right, and left
+        if( directionX + (cell.x + cell.size) > CONFIG.field_width ){
+            cell.x += -directionX;
+        }else if(directionX + cell.x < 0){
+            cell.x += -directionX;
+        }else{
+            cell.x += directionX;
+        }
+
+        // guarding bottom, and top
+        if( directionY + (cell.y + cell.size) > CONFIG.field_height){
+            cell.y += -directionY;
+        }else if(directionY + cell.y < 0){
+            cell.y += -directionY;
+        }
+        else{
+            cell.y += directionY;
+        }
+
+    }
+
+    function moveHtmlCell(cell){
+        cell_ = document.getElementById(cell.id);
+        cell_.style.left = cell.x+"px";
+        cell_.style.top = cell.y+"px";
+    }
+
+    // GAME LOOP
+
+    setInterval(()=>{
+        cells.forEach(cell=>{
+            //give new coordinates
+            moveCell(cell);
+            // translate
+            moveHtmlCell(cell,{});
+        });
+    },1000/60);
+
+    //
+
+    //
+
+    //
+
+    //
+
+
+
 
     // updates the array cell.near[]
     function emitRadar(radarDistance, cell){
@@ -165,8 +255,8 @@
             const left = (cellCenter.x + startingPoints[pointsCounter][1]) + 
                         (points[pointsCounter][1] * counterRadarDistance) ;
 
-            const radar = document.createElement("span");
-            radar.classList.add("radar");
+            //const radar = document.createElement("span");
+            //radar.classList.add("radar");
 
             // array of cells found with this point
             const pointFoundCells = collisionDetection(left,top,cell);
@@ -181,19 +271,19 @@
                 //radar visualization.. yes is only a wave, but we sww also that..
                 //const radar = document.createElement("span");
                 //radar.classList.add("radar");
-                radar.style.backgroundColor = "red";
-                radar.style.left =  left + "px";
-                radar.style.top =  top + "px";
+                //radar.style.backgroundColor = "red";
+                //radar.style.left =  left + "px";
+                //radar.style.top =  top + "px";
                 //append to.. HTML ELEMENT!!!
-                root.appendChild(radar);
+                //root.appendChild(radar);
             }else{
-                 radar.style.backgroundColor = "green";
+                 //radar.style.backgroundColor = "green";
             }
             // radar visualization.. yes is only a wave, but we sww also that..
-            radar.style.left =  left + "px";
-            radar.style.top =  top + "px";
+            //radar.style.left =  left + "px";
+            //radar.style.top =  top + "px";
             // append to.. HTML ELEMENT!!!
-            root.appendChild(radar);
+            //root.appendChild(radar);
         }
         // .... radar found cells [] around this cell ...
         

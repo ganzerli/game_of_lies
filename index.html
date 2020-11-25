@@ -16,13 +16,20 @@
             /* super responsive */
             display:flex;
             justify-content: center;
+            align-items: center;
+            background-color: black;
+            min-height: 100vh;
         }
 
         .root{
             position:relative !important;
             width:600px;
             height:600px;
-            border:1px solid red;
+            border:1px solid white;
+            border-radius: 8px;
+            background-color: #eeeeee;
+            box-shadow:0px 0px 120px white;
+
             /* display:flex; */
             /* flex-wrap: wrap; */
         }
@@ -61,10 +68,13 @@
         "field_height":600,
         "px_move":1.5,
         "game_tick":1000/60,
+        "color_cell_true":"green",
+        "color_cell_false":"darkgrey",
+        "min_size_cell":10,
         "change_spell_surrounded_true":5,
         "change_spell_surrounded_false":3,
         "change_type_spelled_time":5,
-        "time_ever rightPosition = protoCell.x - protoCell.size;y_n_ms":20000
+        "time_ms":20000
     };
 </script>
 
@@ -83,7 +93,7 @@
         //const percentageX = Math.floor(Math.random()*100);
         //const percentageY = Math.floor(Math.random()*100);
         // min size = 4;
-        const percentageS = 4 + Math.floor(Math.random()*40);
+        const percentageS = CONFIG.min_size_cell + Math.floor(Math.random()*40);
         const protoCell = {
             id : Math.random(),
             x:Math.floor(Math.random()*CONFIG.field_width),
@@ -128,7 +138,9 @@
 
         // background color
         if(protoCell.type){
-            exampleCell.style.backgroundColor = "green";
+            exampleCell.style.backgroundColor = CONFIG.color_cell_true;
+        }else{
+            exampleCell.style.backgroundColor = CONFIG.color_cell_false;
         }
         
         exampleCell.style.width = protoCell.size + "px";
@@ -163,7 +175,8 @@
                     directionY = directions.directionY
                 } // if radar true has no false, go random
 
-            }else{ //cell.type === false
+            }
+            else{ //cell.type === false
                 if(nearTrue.length > 0){
 
                 }else{
@@ -204,8 +217,8 @@
         detectedNear.forEach(nf => {
             accumulatorX += nf.x;
             accumulatorY += nf.y;
-        
         });
+
         averagePositionX = accumulatorX / detectedNear.length ;
         averagePositionY = accumulatorY / detectedNear.length ;
         // get other direction
@@ -225,19 +238,6 @@
         });
         averagePositionX = accumulatorX / detectedNear.length ;
         averagePositionY = accumulatorY / detectedNear.length ;
-
-        console.log(averagePositionX);
-
-        // const span = document.createElement("span");
-        // span.style.position = "absolute";
-        // span.style.width = "3px";
-        // span.style.height = "3px";
-        // span.style.top = averagePositionY + "px";
-        // span.style.left = averagePositionX+  "px";
-        // span.style.backgroundColor = "red";
-        // root.appendChild(span);
-
-
 
         // get other direction
         directionX = cell.getCenter().x < averagePositionX ? CONFIG.px_move : -CONFIG.px_move

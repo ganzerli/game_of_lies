@@ -66,21 +66,22 @@
     const CONFIG = {
         "field_width":600,
         "field_height":600,
-        "px_move":1.5,
-        "game_tick":(1000 / 60),
-        "radar_distance":40,
+        "px_move":1.5,                          // how many px per game loop
+        "total_cells_n":100,                    // total count of cells
+        "game_tick":(1000 / 60),                // game loop every n ms
+        "radar_distance":40,                    // how far cells find others
+        "radar_wave_px": 7,                     // distance in px every wave 
         "color_cell_true":"green",
         "color_cell_false":"darkgrey",
-        "min_cell_size":20,
-        "max_cell_size":25,
-        "min_false_to_listen":2,
-        "min_true_to_listen":2,
+        "min_cell_size":20,                     // cells not smaller than
+        "max_cell_size":20,                     // *     *   bigger than
+        "min_false_to_listen":3,                // when n true are around
+        "min_true_to_listen":1,                 // *    * false are around
         "time_ms":20000
     };
 </script>
 
 <script>
-    
     // INIT 
     const root = document.querySelector(".root");
     root.style.width = CONFIG.field_width;
@@ -90,11 +91,10 @@
     const radarDistance = CONFIG.radar_distance;
 
     // CELLS CREATION
-    for (let i = 0; i <= 60; i++) {
-        //const percentageX = Math.floor(Math.random()*100);
-        //const percentageY = Math.floor(Math.random()*100);
-        // min size = 4;
+    for (let i = 0; i <= CONFIG.total_cells_n; i++) {
+
         const percentageS = CONFIG.min_cell_size + Math.floor(Math.random()*CONFIG.max_cell_size);
+
         const protoCell = {
             id : Math.random(),
             x:Math.floor(Math.random()*CONFIG.field_width),
@@ -106,10 +106,7 @@
             near:[]
         }
         printHtmlCell(protoCell);
-        //emitRadar(radarDistance, protoCell);
-        //radar(radarDistance , protoCell.getCenter(), protoCell.size);
         cells.push(protoCell);
-        //emitRadar(radarDistance,protoCell);
     }
 
     // radar for all cells
@@ -170,7 +167,7 @@
                     const directions = getAwayFrom(nearFalse , cell);
                     // get other direction
                     directionX = directions.directionX;
-                    directionY = directions.directionY
+                    directionY = directions.directionY;
                 } 
                 // if radar true has no false, go random
             }
@@ -197,11 +194,22 @@
             }
         }//end radar detects something
 
-        //**PROBABILITY direction ALWAYS random for FALSE**
-        if(Math.random()*10 < 4.000 && !cell.type){
+        // avoid overlapping with every other cell
+        const radarSize = Math.floor((cell.size/2 - (CONFIG.min_cell_size/2)));
+        const overlappingCells = radar(radarSize,cell);
+        if(overlappingCells.length){
+            const directions = getAwayFrom(overlappingCells , cell);
+            directionX = directions.directionX;
+            directionY = directions.directionY;
+        }
+
+        //**PROBABILITY direction ALWAYS random**
+        if(Math.random()*10 < 4.000 ){
             directionX = x_y_randomDirection();
             directionY = x_y_randomDirection();
         }
+
+
 
         // guarding for right, and left
         if( directionX + (cell.x + cell.size) > CONFIG.field_width ){
@@ -224,6 +232,7 @@
 
     }
 
+    // return opposite direction of near cells
     function getAwayFrom(detectedNear , cell){
         let accumulatorX = 0, accumulatorY = 0;
 
@@ -242,6 +251,7 @@
         return{directionX,directionY}
     }
 
+    // returns same direction as the cells near
     function getTowardsTo(detectedNear , cell){
         let accumulatorX = 0, accumulatorY = 0;
 
@@ -260,6 +270,7 @@
         return{directionX,directionY}
     }
 
+    // CHANGE POSITION HTML
     function moveHtmlCell(cell){
         cell_ = document.getElementById(cell.id);
         cell_.style.left = cell.x+"px";
@@ -286,7 +297,6 @@
             moveCell(cell);
             // translate
             moveHtmlCell(cell);
-
             //listen around
             opinionExchange(cell);
 
@@ -301,6 +311,8 @@
 
     //
 
+    // add or diminished the knowledge of single cell when other cell are near checking for kind , changes the color of the cell according to the knowledge
+    // if the cell is too long near other kinds of cell changes kind itself
     function opinionExchange(cell){
 
         const nearFalse = cell.near.filter(near=>!near.type); 
@@ -336,14 +348,13 @@
         // guarding
         if(cell.knowledge > 255) cell.knowledge = 255;
 
-        if(cell.knowledge < 20){
+        if(cell.knowledge < 1){
             cell.type = !cell.type;
         }
 
         htmlCell = document.getElementById(cell.id);
-        // if cell = true knowledge diminish r & b
-        // if cell = false knowledge add r & b
-        let rgb = "rgb(0,0,0)";
+
+        let rgb = "rgb(ab,cd,ef)";
         if (cell.type === true){
             //-> more knowlege more green
             // true =  255-knowledge green 255-knowledge
@@ -364,12 +375,11 @@
     }
 
 
-
     // updates the array cell.near[]
     function emitRadar(radarDistance, cell){
         const cellsFound = []
         // every 3 pixel a radar wave
-        for(let distance=0; distance<= radarDistance; distance += 4){
+        for(let distance=0; distance<= radarDistance; distance += CONFIG.radar_wave_px){
             // one radar "turn around"
             const foundCells = radar(distance, cell);
             //add to array cells found from this cell
@@ -379,6 +389,7 @@
         }
         cell.near.push(...cellsFound);
     }
+
 
     // searches point per point in skew square around the cell for other cells
     function radar(radarDistance, cell){
@@ -418,14 +429,13 @@
             }
             // define radar position
             // print first starting top..
-
             const top = (cellCenter.y + startingPoints[pointsCounter][0]) + 
                         (points[pointsCounter][0] * counterRadarDistance) ;
             const left = (cellCenter.x + startingPoints[pointsCounter][1]) + 
                         (points[pointsCounter][1] * counterRadarDistance) ;
 
             // const radar = document.createElement("span");
-            // // radar.classList.add("radar");
+            // radar.classList.add("radar");
 
             // array of cells found with this point
             const pointFoundCells = collisionDetection(left,top,cell);
@@ -437,25 +447,24 @@
                     if(!cellsFound.includes(cell)) cellsFound.push(cell);
                 });
 
-                // //radar visualization.. yes is only a wave, but we sww also that..
-                //const radar = document.createElement("span");
-                //radar.classList.add("radar");
+                // // //radar visualization.. yes is only a wave, but we sww also that..
+                // const radar = document.createElement("span");
+                // radar.classList.add("radar");
                 // radar.style.backgroundColor = "red";
                 // radar.style.left =  left + "px";
                 // radar.style.top =  top + "px";
-                //append to.. HTML ELEMENT!!!
+                // // //append to.. HTML ELEMENT!!!
                 // root.appendChild(radar);
             }else{
-                 //radar.style.backgroundColor = "green";
+                //  radar.style.backgroundColor = "green";
             }
             // //radar visualization.. yes is only a wave, but we sww also that..
             // radar.style.left =  left + "px";
             // radar.style.top =  top + "px";
-            // append to.. HTML ELEMENT!!!
+            // //append to.. HTML ELEMENT!!!
             // root.appendChild(radar);
         }
         // .... radar found cells [] around this cell ...
-        
         return cellsFound;
     }
 
@@ -478,9 +487,5 @@
     }
     
 
-
 </script>
-
-
-
 </html>

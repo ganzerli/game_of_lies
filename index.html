@@ -27,7 +27,7 @@
             height:600px;
             border:1px solid white;
             border-radius: 8px;
-            background-color: #eeeeee;
+            background-color: #555;
             box-shadow:0px 0px 120px white;
 
             /* display:flex; */
@@ -73,9 +73,8 @@
         "color_cell_false":"darkgrey",
         "min_cell_size":20,
         "max_cell_size":25,
-        "change_spell_surrounded_true":5,
-        "change_spell_surrounded_false":3,
-        "change_type_spelled_time":5,
+        "min_false_to_listen":2,
+        "min_true_to_listen":2,
         "time_ms":20000
     };
 </script>
@@ -304,7 +303,38 @@
 
     function opinionExchange(cell){
 
+        const nearFalse = cell.near.filter(near=>!near.type); 
+        const nearTrue = cell.near.filter(near=>near.type);
 
+        if(cell.near.length > 0){
+
+            if (cell.type === true){
+                // true are less
+                if(nearTrue.length < nearFalse.length){
+                    // enought false
+                    if(nearFalse.length > CONFIG.min_false_to_listen){
+                        cell.knowledge -= 2 * nearFalse.length;
+                    }
+                }else{
+                    cell.knowledge += 2 * nearTrue.length;
+                }
+            }
+
+            if(cell.type === false){
+                // false are less
+                if(nearFalse.length < nearTrue.length){
+                    // enought true
+                    if(nearTrue.length > CONFIG.min_true_to_listen){
+                        cell.knowledge -= 2 * nearTrue.length;
+                    }
+                }else{
+                    cell.knowledge += 2 * nearFalse.length;
+                }
+            }
+        }// end if there are near cells
+
+        // guarding
+        if(cell.knowledge > 255) cell.knowledge = 255;
 
         if(cell.knowledge < 20){
             cell.type = !cell.type;
@@ -313,12 +343,24 @@
         htmlCell = document.getElementById(cell.id);
         // if cell = true knowledge diminish r & b
         // if cell = false knowledge add r & b
-        //-> more knowlege more green
-         // true = # 255-knowledge green 255-knowledge
-            // 
-        // -> more knowlege more grey
-         // false = # +knowledge green +knowledge
-        
+        let rgb = "rgb(0,0,0)";
+        if (cell.type === true){
+            //-> more knowlege more green
+            // true =  255-knowledge green 255-knowledge
+            rgb = "rgb(";
+            rgb += `${(255 - cell.knowledge)},240,${(255 - cell.knowledge)}`;
+            rgb += ")";
+        }
+
+        if (cell.type === false){
+            // -> more knowlege more grey
+            // false = +knowledge green +knowledge
+            rgb = "rgb(";
+            rgb += `${cell.knowledge},240,${cell.knowledge}`;
+            rgb += ")";
+        }
+        // change background color
+        htmlCell.style.backgroundColor = rgb;
     }
 
 

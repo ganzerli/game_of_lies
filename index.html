@@ -67,10 +67,12 @@
         "field_width":600,
         "field_height":600,
         "px_move":1.5,
-        "game_tick":1000/60,
+        "game_tick":(1000 / 60),
+        "radar_distance":40,
         "color_cell_true":"green",
         "color_cell_false":"darkgrey",
-        "min_size_cell":10,
+        "min_cell_size":20,
+        "max_cell_size":25,
         "change_spell_surrounded_true":5,
         "change_spell_surrounded_false":3,
         "change_type_spelled_time":5,
@@ -86,14 +88,14 @@
     root.style.height = CONFIG.field_height;
 
     const cells = [];
-    const radarDistance = 50;
+    const radarDistance = CONFIG.radar_distance;
 
     // CELLS CREATION
     for (let i = 0; i <= 60; i++) {
         //const percentageX = Math.floor(Math.random()*100);
         //const percentageY = Math.floor(Math.random()*100);
         // min size = 4;
-        const percentageS = CONFIG.min_size_cell + Math.floor(Math.random()*40);
+        const percentageS = CONFIG.min_cell_size + Math.floor(Math.random()*CONFIG.max_cell_size);
         const protoCell = {
             id : Math.random(),
             x:Math.floor(Math.random()*CONFIG.field_width),
@@ -101,6 +103,7 @@
             size:percentageS,
             type:Math.random()*10 < 5.000,
             getCenter:function(){return {x:this.x + this.size/2 ,y:this.y + this.size/2}},
+            knowledge:255,
             near:[]
         }
         printHtmlCell(protoCell);
@@ -112,10 +115,8 @@
 
     // radar for all cells
     cells.forEach(cell => emitRadar(radarDistance,cell));
-
-    // print all near cells of all cells..
-    //cells.forEach(cell => console.log(cell.near));
     
+
     // PRINTS cell in HTML 
     function printHtmlCell(protoCell){
         const exampleCell = document.createElement("span");
@@ -150,11 +151,10 @@
 
     // MOVE CELLS
     function moveCell(cell){
-
         const x_y_randomDirection = () => {
            return Math.random()*10 < 5.000 ? CONFIG.px_move : -CONFIG.px_move;
         }
-
+        // in every case , random movement
         let directionX = x_y_randomDirection();
         let directionY = x_y_randomDirection();
 
@@ -165,29 +165,43 @@
             const nearFalse = cell.near.filter(near=>!near.type); 
             const nearTrue = cell.near.filter(near=>near.type);
 
-            // check if cell is true
             if(cell.type === true){
                 if(nearFalse.length > 0){   
-                    //priority true: move away from false
+                    //priority true: move ALWAYS away from false
                     const directions = getAwayFrom(nearFalse , cell);
                     // get other direction
                     directionX = directions.directionX;
                     directionY = directions.directionY
-                } // if radar true has no false, go random
-
+                } 
+                // if radar true has no false, go random
             }
-            else{ //cell.type === false
-                if(nearTrue.length > 0){
 
-                }else{
-                // if radar false has no true, search for false
+            if(cell.type === false){ 
+                if(nearTrue.length > 0){
+                    if(Math.random()*10 < 4.000){
+                    //**PROBABILITY to go towards true**
+                        const directions = getTowardsTo(nearTrue , cell);
+                        directionX = directions.directionX;
+                        directionY = directions.directionY;
+                    }else if(nearFalse.length > 0){
+                    //**PROBABILITY to search false**
+                        const directions = getTowardsTo(nearFalse , cell);
+                        directionX = directions.directionX;
+                        directionY = directions.directionY;
+                    }
+                }else if(nearFalse.length > 0){
+                // NO TRUE near
                     const directions = getTowardsTo(nearFalse , cell);
-                    // get other direction
                     directionX = directions.directionX;
                     directionY = directions.directionY;
                 }
             }
+        }//end radar detects something
 
+        //**PROBABILITY direction ALWAYS random for FALSE**
+        if(Math.random()*10 < 4.000 && !cell.type){
+            directionX = x_y_randomDirection();
+            directionY = x_y_randomDirection();
         }
 
         // guarding for right, and left
@@ -274,8 +288,11 @@
             // translate
             moveHtmlCell(cell);
 
+            //listen around
+            opinionExchange(cell);
+
         });
-    }, (1000 / 60) );
+    }, CONFIG.game_tick );
 
     //
 
@@ -285,6 +302,24 @@
 
     //
 
+    function opinionExchange(cell){
+
+
+
+        if(cell.knowledge < 20){
+            cell.type = !cell.type;
+        }
+
+        htmlCell = document.getElementById(cell.id);
+        // if cell = true knowledge diminish r & b
+        // if cell = false knowledge add r & b
+        //-> more knowlege more green
+         // true = # 255-knowledge green 255-knowledge
+            // 
+        // -> more knowlege more grey
+         // false = # +knowledge green +knowledge
+        
+    }
 
 
 

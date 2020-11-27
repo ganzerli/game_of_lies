@@ -74,7 +74,7 @@
         "color_cell_true":"green",
         "color_cell_false":"darkgrey",
         "min_cell_size":20,                     // cells not smaller than
-        "max_cell_size":20,                     // *     *   bigger than
+        "max_cell_size":30,                     // *     *   bigger than
         "min_false_to_listen":3,                // when n true are around
         "min_true_to_listen":1,                 // *    * false are around
         "time_ms":20000
@@ -99,7 +99,7 @@
             id : Math.random(),
             x:Math.floor(Math.random()*CONFIG.field_width),
             y:Math.floor(Math.random()*CONFIG.field_height),
-            size:percentageS,
+            size:CONFIG.min_cell_size,
             type:Math.random()*10 < 5.000,
             getCenter:function(){return {x:this.x + this.size/2 ,y:this.y + this.size/2}},
             knowledge:255,
@@ -325,7 +325,12 @@
                 if(nearTrue.length < nearFalse.length){
                     // enought false
                     if(nearFalse.length > CONFIG.min_false_to_listen){
+                        // knowledge becomes less
                         cell.knowledge -= 2 * nearFalse.length;
+                        // near false become bigger
+                        nearFalse.forEach(near=>{
+                            if(near.size < CONFIG.max_cell_size)near.size++;
+                        });
                     }
                 }else{
                     cell.knowledge += 2 * nearTrue.length;
@@ -337,13 +342,18 @@
                 if(nearFalse.length < nearTrue.length){
                     // enought true
                     if(nearTrue.length > CONFIG.min_true_to_listen){
+                        // knowledge becomes less
                         cell.knowledge -= 2 * nearTrue.length;
+                        // near false become bigger
+                        nearTrue.forEach(near=>{
+                            if(near.size < CONFIG.max_cell_size)near.size++;
+                        });
                     }
                 }else{
                     cell.knowledge += 2 * nearFalse.length;
                 }
             }
-        }// end if there are near cells
+        }//if near cells
 
         // guarding
         if(cell.knowledge > 255) cell.knowledge = 255;
@@ -372,6 +382,9 @@
         }
         // change background color
         htmlCell.style.backgroundColor = rgb;
+        htmlCell.style.width = cell.size+"px";
+        htmlCell.style.height = cell.size+"px";
+
     }
 
 

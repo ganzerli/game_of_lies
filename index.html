@@ -85,14 +85,15 @@
         "px_move":1,                            // how many px per game loop
         "total_cells_n":100,                    // total count of cells
         "game_tick":(1000 / 60),                // game loop every n ms
-        "radar_distance":60,                   // how far cells find others
+        "radar_distance":60,                    // how far cells find others
         "radar_wave_px": 10,                    // distance in px every wave 
         "color_cell_true":"green",              // background color
         "color_cell_false":"darkgrey",          //  *           *
         "min_cell_size":20,                     // cells not smaller than
         "max_cell_size":30,                     // *     *   bigger than
         "min_false_to_listen":2,                // when n true are around
-        "min_true_to_listen":1                  // *    * false are around
+        "min_true_to_listen":1,                 // *    * false are around
+        "print_lables":true                     // score is printed in cells
     };
 </script>
 
@@ -320,8 +321,7 @@
             //listen around
             opinionExchange(cell);
 
-            // print lables
-            scoreLabel(cell);
+            if(CONFIG.print_lables) scoreLabel(cell);
         });
     }, CONFIG.game_tick );
 

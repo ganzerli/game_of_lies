@@ -23,8 +23,8 @@
 
         .root{
             position:relative !important;
-            width:600px;
-            height:600px;
+            /* width:600px;
+            height:600px; */
             border:1px solid white;
             border-radius: 8px;
             background-color: #555;
@@ -41,7 +41,11 @@
             /* width:100px; */
             /* height:100px; */
             background:black;
-            border-radius: 50%;;
+            border-radius: 50%;
+            font-family: sans-serif;
+            font-size: 8px;
+            text-align: center;
+            padding:3px;
         }
 
         .radar{
@@ -59,25 +63,36 @@
 <body>
 
     <div class="root"></div>
+
+    <!-- 
+
+        TO GET A VISUAL EXAMPLE HOW THE RADAR WORKS:
+        1) COMMENT THE WHOLE GAME LOOP, ELEMENTS ARE FIRST PRINTED ANYWAY.
+        2) UNCOMMENT ALL THE COMMENTED LINES IN THE RADAR FUNCTION(), THAT HAVE TO DO WITH HTML ELEMENT, DOM, STYLE..
+        You can see how the radar is in exactness 
+        
+        NB- -> a <div> is created and printed for every pixel of the radar!! if you don't comment the game loop your browser can have a bed time calculating and printing all <div> s !!!
+
+     -->
     
 </body>
 
 <script id="config">
+    
     const CONFIG = {
-        "field_width":600,
+        "field_width":600,                      
         "field_height":600,
-        "px_move":1.5,                          // how many px per game loop
+        "px_move":1,                            // how many px per game loop
         "total_cells_n":100,                    // total count of cells
         "game_tick":(1000 / 60),                // game loop every n ms
-        "radar_distance":40,                    // how far cells find others
-        "radar_wave_px": 7,                     // distance in px every wave 
-        "color_cell_true":"green",
-        "color_cell_false":"darkgrey",
+        "radar_distance":100,                   // how far cells find others
+        "radar_wave_px": 10,                    // distance in px every wave 
+        "color_cell_true":"green",              // background color
+        "color_cell_false":"darkgrey",          //  *           *
         "min_cell_size":20,                     // cells not smaller than
         "max_cell_size":30,                     // *     *   bigger than
-        "min_false_to_listen":3,                // when n true are around
-        "min_true_to_listen":1,                 // *    * false are around
-        "time_ms":20000
+        "min_false_to_listen":2,                // when n true are around
+        "min_true_to_listen":1                  // *    * false are around
     };
 </script>
 
@@ -108,6 +123,7 @@
         printHtmlCell(protoCell);
         cells.push(protoCell);
     }
+
 
     // radar for all cells
     cells.forEach(cell => emitRadar(radarDistance,cell));
@@ -142,6 +158,7 @@
         
         exampleCell.style.width = protoCell.size + "px";
         exampleCell.style.height = protoCell.size + "px";
+        // print single cell in root
         root.appendChild(exampleCell);
     }
 
@@ -174,7 +191,7 @@
 
             if(cell.type === false){ 
                 if(nearTrue.length > 0){
-                    if(Math.random()*10 < 4.000){
+                    if(Math.random()*10 < 7.500){
                     //**PROBABILITY to go towards true**
                         const directions = getTowardsTo(nearTrue , cell);
                         directionX = directions.directionX;
@@ -204,12 +221,10 @@
         }
 
         //**PROBABILITY direction ALWAYS random**
-        if(Math.random()*10 < 4.000 ){
+        if(Math.random()*10 < 4.000){
             directionX = x_y_randomDirection();
             directionY = x_y_randomDirection();
         }
-
-
 
         // guarding for right, and left
         if( directionX + (cell.x + cell.size) > CONFIG.field_width ){
@@ -232,6 +247,7 @@
 
     }
 
+
     // return opposite direction of near cells
     function getAwayFrom(detectedNear , cell){
         let accumulatorX = 0, accumulatorY = 0;
@@ -250,6 +266,7 @@
 
         return{directionX,directionY}
     }
+
 
     // returns same direction as the cells near
     function getTowardsTo(detectedNear , cell){
@@ -270,6 +287,7 @@
         return{directionX,directionY}
     }
 
+
     // CHANGE POSITION HTML
     function moveHtmlCell(cell){
         cell_ = document.getElementById(cell.id);
@@ -285,7 +303,9 @@
 
     //
 
-    // GAME LOOP
+    // ##### # # #  #   #    #  GAME LOOP
+    // ##### # # #  #   #    #  GAME LOOP
+    // ##### # # #  #   #    #  GAME LOOP
 
     setInterval(()=>{
         cells.forEach(cell=>{
@@ -300,19 +320,30 @@
             //listen around
             opinionExchange(cell);
 
+            // print lables
+            scoreLabel(cell);
         });
     }, CONFIG.game_tick );
 
+    // ##### # # #  #   #    #  GAME LOOP
+    // ##### # # #  #   #    #  GAME LOOP
+    // ##### # # #  #   #    #  GAME LOOP
+
+    //
+
+    // displays kind of cell and knowledge
+    function scoreLabel(cell){
+        const A =    document.getElementById(cell.id);
+        A.innerHTML = cell.type + "<br>" +cell.knowledge;
+    }
     //
 
     //
 
     //
 
-    //
-
-    // add or diminished the knowledge of single cell when other cell are near checking for kind , changes the color of the cell according to the knowledge
-    // if the cell is too long near other kinds of cell changes kind itself
+    // add or diminishes the knowledge of single cell when other cell are near checking for kind , changes the color of the cell according to the knowledge
+    // if the cell stays too long near other kinds of cell changes kind itself
     function opinionExchange(cell){
 
         const nearFalse = cell.near.filter(near=>!near.type); 
@@ -358,13 +389,16 @@
         // guarding
         if(cell.knowledge > 255) cell.knowledge = 255;
 
-        if(cell.knowledge < 1){
+        // changing cell type if too little knowledge
+        if(cell.knowledge < 20){
             cell.type = !cell.type;
+            cell.knowledge = 200;
         }
 
-        htmlCell = document.getElementById(cell.id);
-
+        // Select and change background color to cell from his type
+        const htmlCell = document.getElementById(cell.id);
         let rgb = "rgb(ab,cd,ef)";
+
         if (cell.type === true){
             //-> more knowlege more green
             // true =  255-knowledge green 255-knowledge
@@ -380,11 +414,11 @@
             rgb += `${cell.knowledge},240,${cell.knowledge}`;
             rgb += ")";
         }
-        // change background color
+
+        // change style in HTML
         htmlCell.style.backgroundColor = rgb;
         htmlCell.style.width = cell.size+"px";
         htmlCell.style.height = cell.size+"px";
-
     }
 
 
@@ -392,7 +426,7 @@
     function emitRadar(radarDistance, cell){
         const cellsFound = []
         // every 3 pixel a radar wave
-        for(let distance=0; distance<= radarDistance; distance += CONFIG.radar_wave_px){
+        for(let distance=Math.floor((cell.size/2)); distance<= radarDistance; distance += CONFIG.radar_wave_px){
             // one radar "turn around"
             const foundCells = radar(distance, cell);
             //add to array cells found from this cell
@@ -415,7 +449,7 @@
         let pointsCounter = 0;
 
         // number radar particles increasing 
-        let counterRadarDistance = 0;
+        let counterRadarPoints = 0;
 
         // cells found
         const cellsFound = [];
@@ -432,50 +466,55 @@
 
         // 4 times.. one per side f radar drop
         for (i = 0; i <= radarDistance * points.length + _noIdeaWhy_; i++){
-            if(counterRadarDistance > radarDistance){
+            if(counterRadarPoints > radarDistance){
                 // change direction!!
-                counterRadarDistance = 0;
+                counterRadarPoints = 0;
                 pointsCounter++;
             }else{
                 // get another radar point
-                counterRadarDistance++;
+                counterRadarPoints ++;
             }
-            // define radar position
+            // define radar position of next point
             // print first starting top..
             const top = (cellCenter.y + startingPoints[pointsCounter][0]) + 
-                        (points[pointsCounter][0] * counterRadarDistance) ;
+                        (points[pointsCounter][0] * counterRadarPoints) ;
             const left = (cellCenter.x + startingPoints[pointsCounter][1]) + 
-                        (points[pointsCounter][1] * counterRadarDistance) ;
+                        (points[pointsCounter][1] * counterRadarPoints) ;
 
+            //////////////////////////// radar // visualization ///////
             // const radar = document.createElement("span");
             // radar.classList.add("radar");
-
+            // // // // // // // // // // // // // // // // // // // // 
             // array of cells found with this point
             const pointFoundCells = collisionDetection(left,top,cell);
 
             if(pointFoundCells.length > 0){ 
-                //i+=5;
                 // add cells to the found array
                 pointFoundCells.forEach(cell =>{
                     if(!cellsFound.includes(cell)) cellsFound.push(cell);
                 });
-
                 // // //radar visualization.. yes is only a wave, but we sww also that..
-                // const radar = document.createElement("span");
-                // radar.classList.add("radar");
+            //////////////////////////// radar // visualization ///////
                 // radar.style.backgroundColor = "red";
                 // radar.style.left =  left + "px";
                 // radar.style.top =  top + "px";
                 // // //append to.. HTML ELEMENT!!!
                 // root.appendChild(radar);
+            // // // // // // // // // // // // // // // // // // // // 
+            
             }else{
+            //////////////////////////// radar // visualization ///////
                 //  radar.style.backgroundColor = "green";
+            // // // // // // // // // // // // // // // // // // // // 
+
             }
-            // //radar visualization.. yes is only a wave, but we sww also that..
+            ////radar visualization, yes is only a wave, but we see also that:)
+            //////////////////////////// radar // visualization ///////
             // radar.style.left =  left + "px";
             // radar.style.top =  top + "px";
             // //append to.. HTML ELEMENT!!!
             // root.appendChild(radar);
+            // // // // // // // // // // // // // // // // // // // // 
         }
         // .... radar found cells [] around this cell ...
         return cellsFound;
@@ -498,7 +537,10 @@
         });
         return cellsFoundByPoint;
     }
-    
 
+
+
+    // I'm aways searching a position as web/software developer, contact me at:
+    // massimoganzerli90@gmail.com 
 </script>
 </html>

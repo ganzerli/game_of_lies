@@ -85,7 +85,7 @@
         "px_move":1,                            // how many px per game loop
         "total_cells_n":100,                    // total count of cells
         "game_tick":(1000 / 60),                // game loop every n ms
-        "radar_distance":100,                   // how far cells find others
+        "radar_distance":60,                   // how far cells find others
         "radar_wave_px": 10,                    // distance in px every wave 
         "color_cell_true":"green",              // background color
         "color_cell_false":"darkgrey",          //  *           *
@@ -99,8 +99,8 @@
 <script>
     // INIT 
     const root = document.querySelector(".root");
-    root.style.width = CONFIG.field_width;
-    root.style.height = CONFIG.field_height;
+    root.style.width = CONFIG.field_width+"px";
+    root.style.height = CONFIG.field_height+"px";
 
     const cells = [];
     const radarDistance = CONFIG.radar_distance;

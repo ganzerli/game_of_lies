@@ -8,3 +8,4 @@ Cells surrounded from cells of the same kind increases the own knowledge back.
 When a cell has lost all knowledge changes its kind, and applies to the other behavior.
 
 You can change the options in the CONFIG object to make the game different
+- if the game generation is too boring, reload the browser - :)

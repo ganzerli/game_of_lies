@@ -462,10 +462,10 @@
                 [0, -radarDistance]
             ];
         // or the radar ends to add points before the end..
-        const _noIdeaWhy_ = 5;
+        const _offsetOfWidthFromCenter_ = (cell.size / 4) -1;
 
         // 4 times.. one per side f radar drop
-        for (i = 0; i <= radarDistance * points.length + _noIdeaWhy_; i++){
+        for (i = 0; i <= radarDistance * points.length + _offsetOfWidthFromCenter_; i++){
             if(counterRadarPoints > radarDistance){
                 // change direction!!
                 counterRadarPoints = 0;
